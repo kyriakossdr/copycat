@@ -27,11 +27,6 @@ function App() {
   const handleClick = (id: number) => {
     setActiveID(id);
     window.cl.setActiveEntry(id);
-
-    setEntries(prev => {
-      console.log([...prev.splice(id, 1), ...prev])
-      return [...prev.splice(id, 1), ...prev];
-    });
   }
 
   return (
