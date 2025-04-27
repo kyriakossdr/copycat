@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('cl', {
   onNewEntry: (callback) => {
     ipcRenderer.on('cl:new-entry', (_, entries) => callback(entries));
     return () => ipcRenderer.removeAllListeners('cl:new-entry');
-  }
+  },
+  setActiveEntry: (id) => ipcRenderer.send('cl:set-entry', id),
 });

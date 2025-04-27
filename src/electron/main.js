@@ -29,14 +29,12 @@ const createWindow = () => {
     y,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
     },
   });
 
-  win.webContents.openDevTools()
 
   if (DEV) {
+    win.webContents.openDevTools();
     win.loadURL('http://localhost:5173/');
   } else {
     win.loadFile('dist/index.html');
@@ -53,16 +51,22 @@ const createTray = () => {
 
 const addEntry = () => {
   const entry = clipboard.readText();
-  if (entries.length === LIMIT) return;
-
+  if (entries.length === LIMIT) entries.splice(0, 1);
+  if (entries.includes(entry)) return;
   entries.push(entry);
 
   win.webContents.send('cl:new-entry', entries);
 }
 
+const handleSetEntry = (id) => {
+  clipboard.writeText(entries[id]);
+}
+
 app.whenReady().then(() => {
   clipboardListener.startListening();
+
   ipcMain.handle('cl:get-entries', () => entries);
+  ipcMain.on('cl:set-entry', (_, id) => handleSetEntry(id));
 
   createTray();
   createWindow();
@@ -77,8 +81,7 @@ app.whenReady().then(() => {
 
   clipboardListener.on("change", () => {
     addEntry();
-  })
+  });
 });
-
 
 app.on("quit", () => clipboardListener.stopListening());

@@ -4,22 +4,35 @@ declare global {
   interface Window {
     cl: {
       getEntries: () => Promise<string[]>;
-      onNewEntry: (callback: (entries: string[]) => void) => () => void;
+      onNewEntry: (callback: (newEntries: string[]) => void) => () => void;
+      setActiveEntry: (id: number) => void;
     };
   }
 }
 
-
 function App() {
+  const [activeID, setActiveID] = useState<number>(0);
   const [entries, setEntries] = useState<string[]>([]);
 
   useEffect(() => {
-    window.cl.getEntries().then((entries: string[]) => setEntries(entries))
-
-    const removeListener = window.cl.onNewEntry((entries) => setEntries(entries));
+    const removeListener = window.cl.onNewEntry((newEntries) => {
+      setEntries(newEntries);
+      setActiveID(newEntries.length - 1);
+    });
+    window.cl.getEntries().then((entries: string[]) => setEntries(entries));
 
     return removeListener;
   }, []);
+
+  const handleClick = (id: number) => {
+    setActiveID(id);
+    window.cl.setActiveEntry(id);
+
+    setEntries(prev => {
+      console.log([...prev.splice(id, 1), ...prev])
+      return [...prev.splice(id, 1), ...prev];
+    });
+  }
 
   return (
     <>
@@ -30,10 +43,10 @@ function App() {
         {
           entries.length ? (
             entries.map((entry, index) => (
-              <li key={index}><pre>{entry}</pre></li>
+              <li className={activeID === index ? 'entry active-entry' : 'entry'} key={index} onClick={() => handleClick(index)}><pre>{entry}</pre></li>
             ))
           ) : (
-            <li style={{textAlign: 'center', fontStyle: 'italic'}}>Nothing here ..</li>
+            <li style={{textAlign: 'center', fontStyle: 'italic'}}><pre>😿 Nothing here 😿</pre></li>
           )
         }
       </ul>
